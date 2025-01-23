@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "ts-node src/main.ts"
   },
   "keywords": [],
   "author": "",
@@ -19,7 +20,8 @@
   },
   "dependencies": {
     "@prisma/client": "^6.2.1",
-    "bcrypt": "^5.1.1"
+    "bcrypt": "^5.1.1",
+    "fastify": "^5.2.1"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
