@@ -1,10 +1,11 @@
 import { PrismaClient } from "@prisma/client";
-import { error } from "console";
-import Fastify, { FastifyInstance, RouteShorthandOptions } from "fastify";
-import { Server, IncomingMessage, ServerResponse } from "http";
+import Fastify, { FastifyInstance } from "fastify";
 import fastifyFormBody from "@fastify/formbody";
 import z from "zod";
-import { bookSchema } from "./schemas";
+import { bookSchema, userLoginSchema, userRegistrationSchema } from "./schemas";
+import fastifyMiddie from "@fastify/middie";
+import { comparePassword, hashPassword } from "../utils/hash";
+import { signToken } from "../utils/jwt";
 
 const prisma = new PrismaClient();
 
@@ -12,21 +13,67 @@ const server: FastifyInstance = Fastify({});
 
 // application/x-www-form-urlencoded parser
 server.register(fastifyFormBody);
+server.register(fastifyMiddie);
 
-const opts: RouteShorthandOptions = {
-  schema: {
-    response: {
-      200: {
-        type: "object",
-        properties: {
-          pong: {
-            type: "string",
+// REGISTER
+server.post("/register", async (request, reply) => {
+  const parsedBody = userRegistrationSchema.parse(request.body);
+  parsedBody.password = await hashPassword(parsedBody.password);
+  const { name, email, password, role, phone, status } = parsedBody;
+  const newUser = await prisma.user.create({
+    data: {
+      name,
+      email,
+      password,
+      role,
+      members: {
+        create: [
+          {
+            name,
+            email,
+            joinedDate: new Date(),
+            status,
+            phone,
           },
-        },
+        ],
       },
     },
-  },
-};
+  });
+  reply.status(201).send({
+    statusCode: 201,
+    message: "Successfully create a user",
+    data: newUser,
+  });
+});
+
+// LOGIN
+server.post("/login", async (request, reply) => {
+  const parsedBody = userLoginSchema.parse(request.body);
+  const { email, password } = parsedBody;
+  const foundUser = await prisma.user.findUnique({
+    where: {
+      email,
+    },
+  });
+  if (!foundUser) {
+    throw { statusCode: 401, message: "Unauthorized" };
+  }
+  const isPasswordValid = await comparePassword(password, foundUser.password);
+  if (!isPasswordValid) {
+    throw { statusCode: 401, message: "Unauthorized" };
+  }
+
+  const token = signToken({
+    id: foundUser.id,
+    email: foundUser.email,
+  });
+
+  reply.status(200).send({
+    statusCode: 200,
+    message: "Successfully login",
+    data: { token },
+  });
+});
 
 // ** BOOKS API
 
