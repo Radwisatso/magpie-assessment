@@ -13,12 +13,30 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  ADMIN
+  MEMBER
+}
+
+enum MemberStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum CategoryName {
+  ROMANCE
+  HORROR
+  EDUCATION
+  SCIENCE
+  ACTION
+}
+
 model User {
   id       Int      @id @default(autoincrement())
   email    String   @unique
   password String
   name     String
-  role     String
+  role     UserRole @default(MEMBER)
   members  Member[]
   books    Book[]
   lendings Lending[] @relation("LendingCreatedBy")
@@ -32,7 +50,7 @@ model Member {
   name       String
   email      String   @unique
   phone      String?
-  status     String
+  status     MemberStatus @default(ACTIVE)
   joinedDate DateTime @map("joined_date")
   user       User     @relation(fields: [userId], references: [id])
   lendings   Lending[]
@@ -58,7 +76,7 @@ model Book {
 
 model Category {
   id    Int    @id @default(autoincrement())
-  name  String
+  name  CategoryName
   books Book[]
 
   @@map("categories")
