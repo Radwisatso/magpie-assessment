@@ -6,6 +6,6 @@ declare module "@fastify/request-context" {
       id: number;
       email: string;
       iat: number;
-    };
+    } | null;
   }
 }
