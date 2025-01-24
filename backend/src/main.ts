@@ -7,6 +7,21 @@ import { comparePassword, hashPassword } from "../utils/hash";
 import { signToken, verifyToken } from "../utils/jwt";
 import { JwtPayload } from "jsonwebtoken";
 import { addDays } from "date-fns";
+import ScalarApiReference from "@scalar/fastify-api-reference";
+import FastifySwagger from "@fastify/swagger";
+import {
+  analyticsSchemaAPI,
+  createBookSchemaAPI,
+  createLendingSchemaAPI,
+  deleteBookSchemaAPI,
+  getBookByIdSchemaAPI,
+  getBooksSchemaAPI,
+  getLendingsSchemaAPI,
+  loginSchemaAPI,
+  registerSchemaAPI,
+  returnBookSchemaAPI,
+  updateBookSchemaAPI,
+} from "./openapi";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -17,70 +32,96 @@ declare module "fastify" {
 const prisma = new PrismaClient();
 
 const server: FastifyInstance = Fastify({});
-server.decorateRequest("user", null);
-server.register(fastifyFormBody);
-// REGISTER
-server.post("/register", async (request, reply) => {
-  const parsedBody = userRegistrationSchema.parse(request.body);
-  parsedBody.password = await hashPassword(parsedBody.password);
-  const { name, email, password, role, phone, status } = parsedBody;
-  const newUser = await prisma.user.create({
-    data: {
-      name,
-      email,
-      password,
-      role,
-      members: {
-        create: [
-          {
-            name,
-            email,
-            joinedDate: new Date(),
-            status,
-            phone,
-          },
-        ],
+
+server.register(FastifySwagger, {
+  openapi: {
+    info: {
+      title: "Library Management API",
+      description: "API for managing library books, users, and lending records",
+      version: "1.0.0",
+    },
+    tags: [
+      { name: "Auth", description: "Authentication endpoints" },
+      { name: "Books", description: "Book management endpoints" },
+      { name: "Lendings", description: "Lending management endpoints" },
+      { name: "Analytics", description: "Analytics and reporting endpoints" },
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
       },
     },
-  });
-  reply.status(201).send({
-    statusCode: 201,
-    message: "Successfully create a user",
-    data: newUser,
-  });
+  },
 });
 
-// LOGIN
-server.post("/login", async (request, reply) => {
-  const parsedBody = userLoginSchema.parse(request.body);
-  const { email, password } = parsedBody;
-  const foundUser = await prisma.user.findUnique({
-    where: {
-      email,
-    },
-  });
-  if (!foundUser) {
-    throw { statusCode: 401, message: "Unauthorized" };
-  }
-  const isPasswordValid = await comparePassword(password, foundUser.password);
-  if (!isPasswordValid) {
-    throw { statusCode: 401, message: "Unauthorized" };
-  }
+server.decorateRequest("user", null);
+server.register(fastifyFormBody);
 
-  const token = signToken({
-    id: foundUser.id,
-    email: foundUser.email,
+// ** REGISTER & LOGIN
+server.register(async function publicContext(childServer) {
+  childServer.post("/register", registerSchemaAPI, async (request, reply) => {
+    const parsedBody = userRegistrationSchema.parse(request.body);
+    parsedBody.password = await hashPassword(parsedBody.password);
+    const { name, email, password, role, phone, status } = parsedBody;
+    const newUser = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password,
+        role,
+        members: {
+          create: [
+            {
+              name,
+              email,
+              joinedDate: new Date(),
+              status,
+              phone,
+            },
+          ],
+        },
+      },
+    });
+    reply.status(201).send({
+      statusCode: 201,
+      message: "Successfully create a user",
+      data: newUser,
+    });
   });
+  childServer.post("/login", loginSchemaAPI, async (request, reply) => {
+    const parsedBody = userLoginSchema.parse(request.body);
+    const { email, password } = parsedBody;
+    const foundUser = await prisma.user.findUnique({
+      where: {
+        email,
+      },
+    });
+    if (!foundUser) {
+      throw { statusCode: 401, message: "Unauthorized" };
+    }
+    const isPasswordValid = await comparePassword(password, foundUser.password);
+    if (!isPasswordValid) {
+      throw { statusCode: 401, message: "Unauthorized" };
+    }
 
-  reply.status(200).send({
-    statusCode: 200,
-    message: "Successfully login",
-    data: { token },
+    const token = signToken({
+      id: foundUser.id,
+      email: foundUser.email,
+    });
+
+    reply.status(200).send({
+      statusCode: 200,
+      message: "Successfully login",
+      data: { token },
+    });
   });
 });
 
 // ** BOOKS API
-
 server.register(async function authenticatedContext(childServer) {
   // AUTHENTICATION
   childServer.addHook("preHandler", async (request, reply) => {
@@ -95,7 +136,7 @@ server.register(async function authenticatedContext(childServer) {
     }
   });
   // GET BOOKS
-  childServer.get("/books", async (request, reply) => {
+  childServer.get("/books", getBooksSchemaAPI, async (request, reply) => {
     const books = await prisma.book.findMany();
     reply.code(200).send({
       statusCode: 200,
@@ -104,24 +145,28 @@ server.register(async function authenticatedContext(childServer) {
     });
   });
   // GET BOOK BY ID
-  childServer.get("/books/:id", async (request, reply) => {
-    const { id } = request.params as { id: string };
-    const book = await prisma.book.findUnique({
-      where: {
-        id: parseInt(id),
-      },
-    });
-    if (!book) {
-      throw { statusCode: 404, message: "Book not found" };
+  childServer.get(
+    "/books/:id",
+    getBookByIdSchemaAPI,
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      const book = await prisma.book.findUnique({
+        where: {
+          id: parseInt(id),
+        },
+      });
+      if (!book) {
+        throw { statusCode: 404, message: "Book not found" };
+      }
+      reply.code(200).send({
+        statusCode: 200,
+        message: "Successfully fetch book",
+        data: book,
+      });
     }
-    reply.code(200).send({
-      statusCode: 200,
-      message: "Successfully fetch book",
-      data: book,
-    });
-  });
+  );
   // CREATE BOOK
-  childServer.post("/books", async (request, reply) => {
+  childServer.post("/books", createBookSchemaAPI, async (request, reply) => {
     const parsedBody = bookSchema.parse(request.body);
     if (!request.user) {
       throw { statusCode: 401, message: "Unauthorized" };
@@ -151,7 +196,7 @@ server.register(async function authenticatedContext(childServer) {
     });
   });
   // UPDATE BOOK
-  childServer.put("/books/:id", async (request, reply) => {
+  childServer.put("/books/:id", updateBookSchemaAPI, async (request, reply) => {
     const { id } = request.params as { id: string };
     const parsedBody = bookSchema.parse(request.body);
     const { title, author, isbn, quantity, categoryId } = parsedBody;
@@ -188,91 +233,99 @@ server.register(async function authenticatedContext(childServer) {
     });
   });
   // DELETE BOOK
-  childServer.delete("/books/:id", async (request, reply) => {
-    const { id } = request.params as { id: string };
-    if (!request.user) {
-      throw { statusCode: 401, message: "Unauthorized" };
-    }
-    const book = await prisma.book.findUnique({
-      where: {
-        id: parseInt(id),
-      },
-    });
-    if (!book) {
-      throw { statusCode: 404, message: "Book not found" };
-    }
-    if (book.createdBy !== request.user.id) {
-      throw { statusCode: 403, message: "Forbidden" };
-    }
-    await prisma.bookStatus.delete({
-      where: {
-        id: parseInt(id),
-      },
-      include: {
-        book: true,
-      },
-    });
-    reply.status(200).send({
-      statusCode: 200,
-      message: "Successfully deleted a book",
-    });
-  });
-  // CREATE LENDING
-  childServer.post("/lendings/:bookId", async (request, reply) => {
-    const { bookId } = request.params as { bookId: string };
-    if (!request.user) {
-      throw { statusCode: 401, message: "Unauthorized" };
-    }
-    const book = await prisma.book.findUnique({
-      where: {
-        id: parseInt(bookId),
-      },
-      include: {
-        status: true,
-      },
-    });
-    if (!book) {
-      throw { statusCode: 404, message: "Book not found" };
-    }
-    if (book.status?.availableQty === 0) {
-      throw { statusCode: 400, message: "Book is not available" };
-    }
-    const lendingTransaction = await prisma.$transaction(async (tx) => {
-      const newLending = await tx.lending.create({
-        data: {
-          bookId: parseInt(bookId),
-          memberId: request.user?.id,
-          status: "BORROWED",
-          borrowedDate: new Date(),
-          dueDate: addDays(new Date(), 7),
-          createdBy: request.user?.id,
+  childServer.delete(
+    "/books/:id",
+    deleteBookSchemaAPI,
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      if (!request.user) {
+        throw { statusCode: 401, message: "Unauthorized" };
+      }
+      const book = await prisma.book.findUnique({
+        where: {
+          id: parseInt(id),
         },
       });
-
-      await tx.bookStatus.update({
+      if (!book) {
+        throw { statusCode: 404, message: "Book not found" };
+      }
+      if (book.createdBy !== request.user.id) {
+        throw { statusCode: 403, message: "Forbidden" };
+      }
+      await prisma.bookStatus.delete({
+        where: {
+          id: parseInt(id),
+        },
+        include: {
+          book: true,
+        },
+      });
+      reply.status(200).send({
+        statusCode: 200,
+        message: "Successfully deleted a book",
+      });
+    }
+  );
+  // CREATE LENDING
+  childServer.post(
+    "/lendings/:bookId",
+    createLendingSchemaAPI,
+    async (request, reply) => {
+      const { bookId } = request.params as { bookId: string };
+      if (!request.user) {
+        throw { statusCode: 401, message: "Unauthorized" };
+      }
+      const book = await prisma.book.findUnique({
         where: {
           id: parseInt(bookId),
         },
-        data: {
-          availableQty: {
-            decrement: 1,
-          },
-          borrowedQty: {
-            increment: 1,
-          },
+        include: {
+          status: true,
         },
       });
-      return newLending;
-    });
+      if (!book) {
+        throw { statusCode: 404, message: "Book not found" };
+      }
+      if (book.status?.availableQty === 0) {
+        throw { statusCode: 400, message: "Book is not available" };
+      }
+      const lendingTransaction = await prisma.$transaction(async (tx) => {
+        const newLending = await tx.lending.create({
+          data: {
+            bookId: parseInt(bookId),
+            memberId: request.user?.id,
+            status: "BORROWED",
+            borrowedDate: new Date(),
+            dueDate: addDays(new Date(), 7),
+            createdBy: request.user?.id,
+          },
+        });
 
-    reply.status(201).send({
-      statusCode: 201,
-      message: "Successfully borrowed a book",
-      data: lendingTransaction,
-    });
-  });
+        await tx.bookStatus.update({
+          where: {
+            id: parseInt(bookId),
+          },
+          data: {
+            availableQty: {
+              decrement: 1,
+            },
+            borrowedQty: {
+              increment: 1,
+            },
+          },
+        });
+        return newLending;
+      });
+
+      reply.status(201).send({
+        statusCode: 201,
+        message: "Successfully borrowed a book",
+        data: lendingTransaction,
+      });
+    }
+  );
   // GET USERS/MEMBERS LENDINGS HISTORY
-  childServer.get("/lendings", async (request, reply) => {
+  childServer.get("/lendings", getLendingsSchemaAPI, async (request, reply) => {
     if (!request.user) {
       throw { statusCode: 401, message: "Unauthorized" };
     }
@@ -289,59 +342,99 @@ server.register(async function authenticatedContext(childServer) {
       message: "Successfully retrieved lendings",
       data: lendings,
     });
-  })
-
+  });
   // RETURN BOOK LENDINGS
-  childServer.put("/lendings/:id/return", async (request, reply) => {
-    const { id } = request.params as { id: string };
-    if (!request.user) {
-      throw { statusCode: 401, message: "Unauthorized" };
-    }
-    const lending = await prisma.lending.findUnique({
-      where: {
-        id: parseInt(id),
-      },
-      include: {
-        book: true,
-      },
-    });
-    if (!lending) {
-      throw { statusCode: 404, message: "Lending not found" };
-    }
-    if (lending.status === "RETURNED") {
-      throw { statusCode: 400, message: "Book has already been returned" };
-    }
-    const returningBookTransaction = await prisma.$transaction(async (tx) => {
-      const updateLending = await tx.lending.update({
+  childServer.put(
+    "/lendings/:id/return",
+    returnBookSchemaAPI,
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      if (!request.user) {
+        throw { statusCode: 401, message: "Unauthorized" };
+      }
+      const lending = await prisma.lending.findUnique({
         where: {
           id: parseInt(id),
         },
-        data: {
-          status: "RETURNED",
-          returnDate: new Date(),
+        include: {
+          book: true,
         },
       });
-      await tx.bookStatus.update({
-        where: {
-          id: lending.bookId,
-        },
-        data: {
-          availableQty: {
-            increment: 1,
+      if (!lending) {
+        throw { statusCode: 404, message: "Lending not found" };
+      }
+      if (lending.memberId !== request.user.id) {
+        throw { statusCode: 403, message: "Forbidden" };
+      }
+      if (lending.status === "RETURNED") {
+        throw { statusCode: 400, message: "Book has already been returned" };
+      }
+      const returningBookTransaction = await prisma.$transaction(async (tx) => {
+        const updateLending = await tx.lending.update({
+          where: {
+            id: parseInt(id),
           },
-          borrowedQty: {
-            decrement: 1,
+          data: {
+            status: "RETURNED",
+            returnDate: new Date(),
           },
-        },
+        });
+        await tx.bookStatus.update({
+          where: {
+            id: lending.bookId,
+          },
+          data: {
+            availableQty: {
+              increment: 1,
+            },
+            borrowedQty: {
+              decrement: 1,
+            },
+          },
+        });
+        return updateLending;
       });
-      return updateLending
-    })
+      reply.status(200).send({
+        statusCode: 200,
+        message: "Successfully returned a book",
+        data: returningBookTransaction,
+      });
+    }
+  );
+  // ANALYTICS
+  childServer.get("/analytics", analyticsSchemaAPI, async (request, reply) => {
+    if (!request.user) {
+      throw { statusCode: 401, message: "Unauthorized" };
+    }
+    const [totalBooks, totalLendings, activeLendings, overdueLendings] =
+      await Promise.all([
+        prisma.book.count(),
+        prisma.lending.count(),
+        prisma.lending.count({
+          where: {
+            status: "BORROWED",
+          },
+        }),
+        prisma.lending.count({
+          where: {
+            status: "BORROWED",
+            dueDate: {
+              lt: new Date(),
+            },
+          },
+        }),
+      ]);
     reply.status(200).send({
       statusCode: 200,
-      message: "Successfully returned a book",
-      data: returningBookTransaction,
+      message: "Successfully retrieved analytics",
+      data: {
+        totalBooks,
+        totalLendings,
+        activeLendings,
+        overdueLendings,
+      },
     });
-  })
+  });
 });
 
 // ** ERROR HANDLER
@@ -380,6 +473,84 @@ server.setErrorHandler((error, request, reply) => {
     errors: error,
   });
 });
+
+server.get("/openapi.json", async (request, reply) => {
+  return server.swagger();
+});
+
+server.register(ScalarApiReference, {
+  routePrefix: "/reference",
+  configuration: {
+    title: "Library Management API",
+    description: "Complete API documentation for Library Management System",
+    version: "1.0.0",
+    theme: {
+      primaryColor: "#2563eb",
+    },
+    defaultLayout: "modern",
+    navigation: [
+      {
+        label: "Authentication",
+        items: [
+          { label: "Register", path: "/register" },
+          { label: "Login", path: "/login" },
+        ],
+      },
+      {
+        label: "Books",
+        items: [
+          { label: "Get All Books", path: "/books" },
+          { label: "Get Book by ID", path: "/books/{id}" },
+          { label: "Create Book", path: "/books" },
+          { label: "Update Book", path: "/books/{id}" },
+          { label: "Delete Book", path: "/books/{id}" },
+        ],
+      },
+      {
+        label: "Lendings",
+        items: [
+          { label: "Get Lending History", path: "/lendings" },
+          { label: "Borrow Book", path: "/lendings/{bookId}" },
+          { label: "Return Book", path: "/lendings/{id}/return" },
+        ],
+      },
+      {
+        label: "Analytics",
+        items: [{ label: "Dashboard Statistics", path: "/analytics" }],
+      },
+    ],
+    examples: {
+      auth: {
+        login: {
+          value: {
+            email: "user@example.com",
+            password: "password123",
+          },
+        },
+        register: {
+          value: {
+            name: "John Doe",
+            email: "john@example.com",
+            password: "password123",
+            role: "MEMBER",
+            phone: "1234567890",
+            status: "ACTIVE",
+          },
+        },
+      },
+    },
+  },
+  hooks: {
+    onRequest: function (request, reply, done) {
+      done();
+    },
+    preHandler: function (request, reply, done) {
+      done();
+    },
+  },
+});
+
+server.ready();
 
 const start = async () => {
   try {

@@ -1,158 +1,122 @@
 # Library Management System API
 
-A RESTful API service for managing library books, built with Fastify, TypeScript, and PostgreSQL.
+A comprehensive API for managing library resources, including books, users, and lending operations.
+
+## Database Schema
+
+The system uses PostgreSQL with the following main entities:
+- Users
+- Members
+- Books
+- Categories
+- Lendings
+- BookStatus
+
+## Features
+- User authentication and authorization
+- Book management (CRUD operations)
+- Lending system with due dates
+- Real-time book availability tracking
+- Analytics dashboard
+- API documentation with Swagger and Scalar
+- Input validation
+- Error handling
+- Database transactions for data integrity
 
 ## Tech Stack
+- Fastify
+- TypeScript
+- Prisma ORM
+- PostgreSQL
+- Zod (validation)
+- JWT (authentication)
+- Swagger/OpenAPI
+- Scalar API Reference
 
-- **Runtime**: Node.js
-- **Framework**: Fastify
-- **Language**: TypeScript
-- **Database**: PostgreSQL
-- **ORM**: Prisma
-- **Authentication**: JWT
-- **Validation**: Zod
+## Getting Started
 
-## Prerequisites
-
-- Node.js (v14 or higher)
+### Prerequisites
+- Node.js
 - PostgreSQL
 - npm or yarn
 
-## Setup
-
-1. Install dependencies:
+### Installation
+1. Clone the repository
+2. Install dependencies:
 ```bash
 npm install
 ```
-
-2. Create `.env` file in the root directory:
+3. Set up environment variables in `.env`:
+```plaintext
+DATABASE_URL="postgresql://user:password@localhost:5432/library_db"
 ```
-DATABASE_URL="postgresql://username:password@localhost:5432/your_database_name"
-```
-
-3. Run database migrations:
+4. Run database migrations:
 ```bash
 npx prisma migrate dev
 ```
-
-4. Seed the database:
-```bash
-npx prisma db seed
-```
-
-5. Start the development server:
+5. Start the server:
 ```bash
 npm run dev
 ```
 
-## API Endpoints
+## API Documentation Access
+
+After starting the server, you can access the API documentation in two ways:
+
+1. **Scalar API Reference (Recommended)**
+   - URL: [http://localhost:3000/reference](http://localhost:3000/reference)
+   - Interactive documentation with request/response examples
+   - Built-in API testing interface
+   - Organized by resource categories
+
+2. **OpenAPI/Swagger Documentation**
+   - URL: [http://localhost:3000/openapi.json](http://localhost:3000/openapi.json)
+   - Raw OpenAPI specification
 
 ### Authentication
-
-#### Register User
-- **POST** `/register`
-- Body:
-```json
-{
-  "name": "string",
-  "email": "string",
-  "password": "string",
-  "role": "ADMIN" | "MEMBER",
-  "phone": "string",
-  "status": "ACTIVE" | "INACTIVE"
-}
-```
-
-#### Login
-- **POST** `/login`
-- Body:
-```json
-{
-  "email": "string",
-  "password": "string"
-}
-```
-
-### Books Management
-
-All book endpoints require JWT authentication token in the header:
-```
+All authenticated endpoints require a Bearer token:
+```plaintext
 Authorization: Bearer <your_token>
 ```
 
-#### Get All Books
-- **GET** `/books`
+### Available Endpoints
 
-#### Get Book by ID
-- **GET** `/books/:id`
+#### Authentication
+- **POST** `/register` - Register a new user
+- **POST** `/login` - Login and get access token
 
-#### Create Book
-- **POST** `/books`
-- Body:
-```json
-{
-  "title": "string",
-  "author": "string",
-  "isbn": "string",
-  "quantity": number,
-  "categoryId": number
-}
-```
+#### Books Management
+- **GET** `/books` - Get all books
+- **GET** `/books/:id` - Get book by ID
+- **POST** `/books` - Create a new book
+- **PUT** `/books/:id` - Update a book
+- **DELETE** `/books/:id` - Delete a book
 
-#### Update Book
-- **PUT** `/books/:id`
-- Body:
-```json
-{
-  "title": "string",
-  "author": "string",
-  "isbn": "string",
-  "quantity": number,
-  "categoryId": number
-}
-```
+#### Lending Operations
+- **GET** `/lendings` - Get user's lending history
+- **POST** `/lendings/:bookId` - Borrow a book
+- **PUT** `/lendings/:id/return` - Return a book
 
-#### Delete Book
-- **DELETE** `/books/:id`
+#### Analytics
+- **GET** `/analytics` - Get library statistics
 
 ## Error Handling
 
 The API uses standard HTTP status codes and returns errors in the following format:
-
 ```json
 {
   "statusCode": number,
-  "message": "string",
-  "errors": [] // optional, present for validation errors
+  "message": string,
+  "errors": object (optional)
 }
 ```
 
 Common status codes:
-- `200`: Success
-- `201`: Created
-- `400`: Bad Request
-- `401`: Unauthorized
-- `403`: Forbidden
-- `404`: Not Found
-- `500`: Internal Server Error
+- `200` - Success
+- `201` - Created
+- `400` - Bad Request
+- `401` - Unauthorized
+- `403` - Forbidden
+- `404` - Not Found
+- `500` - Internal Server Error
 
-## Development
-
-### Database Schema Updates
-
-1. Update the schema in `prisma/schema.prisma`
-2. Run migration:
-```bash
-npx prisma migrate dev --name your_migration_name
-```
-
-### Type Safety
-
-The project uses TypeScript and Zod for type safety and runtime validation. Make sure to:
-- Define types for new features
-- Use Zod schemas for request validation
-- Keep Prisma schema in sync with your database
-
-## License
-
-ISC
