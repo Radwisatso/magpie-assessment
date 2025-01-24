@@ -217,7 +217,7 @@ server.register(async function authenticatedContext(childServer) {
       message: "Successfully deleted a book",
     });
   });
-  // LENDINGS
+  // CREATE LENDING
   childServer.post("/lendings/:bookId", async (request, reply) => {
     const { bookId } = request.params as { bookId: string };
     if (!request.user) {
@@ -271,6 +271,25 @@ server.register(async function authenticatedContext(childServer) {
       data: lendingTransaction,
     });
   });
+  // GET USERS/MEMBERS LENDINGS HISTORY
+  childServer.get("/lendings", async (request, reply) => {
+    if (!request.user) {
+      throw { statusCode: 401, message: "Unauthorized" };
+    }
+    const lendings = await prisma.lending.findMany({
+      where: {
+        memberId: request.user?.id,
+      },
+      include: {
+        book: true,
+      },
+    });
+    reply.status(200).send({
+      statusCode: 200,
+      message: "Successfully retrieved lendings",
+      data: lendings,
+    });
+  })
 });
 
 // ** ERROR HANDLER
