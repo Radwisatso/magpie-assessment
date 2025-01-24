@@ -290,6 +290,58 @@ server.register(async function authenticatedContext(childServer) {
       data: lendings,
     });
   })
+
+  // RETURN BOOK LENDINGS
+  childServer.put("/lendings/:id/return", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    if (!request.user) {
+      throw { statusCode: 401, message: "Unauthorized" };
+    }
+    const lending = await prisma.lending.findUnique({
+      where: {
+        id: parseInt(id),
+      },
+      include: {
+        book: true,
+      },
+    });
+    if (!lending) {
+      throw { statusCode: 404, message: "Lending not found" };
+    }
+    if (lending.status === "RETURNED") {
+      throw { statusCode: 400, message: "Book has already been returned" };
+    }
+    const returningBookTransaction = await prisma.$transaction(async (tx) => {
+      const updateLending = await tx.lending.update({
+        where: {
+          id: parseInt(id),
+        },
+        data: {
+          status: "RETURNED",
+          returnDate: new Date(),
+        },
+      });
+      await tx.bookStatus.update({
+        where: {
+          id: lending.bookId,
+        },
+        data: {
+          availableQty: {
+            increment: 1,
+          },
+          borrowedQty: {
+            decrement: 1,
+          },
+        },
+      });
+      return updateLending
+    })
+    reply.status(200).send({
+      statusCode: 200,
+      message: "Successfully returned a book",
+      data: returningBookTransaction,
+    });
+  })
 });
 
 // ** ERROR HANDLER
