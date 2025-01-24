@@ -1,22 +1,16 @@
 import { bookSchema, userLoginSchema, userRegistrationSchema } from "./schemas";
 import { PrismaClient } from "@prisma/client";
 import Fastify, { FastifyInstance } from "fastify";
-import fastifyRequestContext from "@fastify/request-context";
 import fastifyFormBody from "@fastify/formbody";
-import fastifyMiddie from "@fastify/middie";
 import z from "zod";
 import { comparePassword, hashPassword } from "../utils/hash";
 import { signToken } from "../utils/jwt";
-import { authentication } from "./middlewares/authentication";
 
 const prisma = new PrismaClient();
 
 const server: FastifyInstance = Fastify({});
 
 server.register(fastifyFormBody);
-server.register(fastifyMiddie);
-server.register(fastifyRequestContext);
-server.use("/books", authentication)
 // REGISTER
 server.post("/register", async (request, reply) => {
   const parsedBody = userRegistrationSchema.parse(request.body);

@@ -12,7 +12,6 @@
   "description": "",
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
-    "@types/connect": "^3.4.38",
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22.10.8",
     "nodemon": "^3.1.9",
@@ -24,7 +23,6 @@
   "dependencies": {
     "@fastify/formbody": "^8.0.2",
     "@fastify/middie": "^9.0.3",
-    "@fastify/request-context": "^6.0.2",
     "@prisma/client": "^6.2.1",
     "bcrypt": "^5.1.1",
     "fastify": "^5.2.1",
