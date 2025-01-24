@@ -6,6 +6,7 @@ import z from "zod";
 import { comparePassword, hashPassword } from "../utils/hash";
 import { signToken, verifyToken } from "../utils/jwt";
 import { JwtPayload } from "jsonwebtoken";
+import { addDays } from "date-fns";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -200,28 +201,81 @@ server.register(async function authenticatedContext(childServer) {
     if (!book) {
       throw { statusCode: 404, message: "Book not found" };
     }
-    if (book.createdBy!== request.user.id) {
+    if (book.createdBy !== request.user.id) {
       throw { statusCode: 403, message: "Forbidden" };
     }
-    console.log("masuk")
     await prisma.bookStatus.delete({
       where: {
         id: parseInt(id),
       },
       include: {
-        book: true
-      }
+        book: true,
+      },
     });
     reply.status(200).send({
       statusCode: 200,
       message: "Successfully deleted a book",
     });
   });
+  // LENDINGS
+  childServer.post("/lendings/:bookId", async (request, reply) => {
+    const { bookId } = request.params as { bookId: string };
+    if (!request.user) {
+      throw { statusCode: 401, message: "Unauthorized" };
+    }
+    const book = await prisma.book.findUnique({
+      where: {
+        id: parseInt(bookId),
+      },
+      include: {
+        status: true,
+      },
+    });
+    if (!book) {
+      throw { statusCode: 404, message: "Book not found" };
+    }
+    if (book.status?.availableQty === 0) {
+      throw { statusCode: 400, message: "Book is not available" };
+    }
+    const lendingTransaction = await prisma.$transaction(async (tx) => {
+      const newLending = await tx.lending.create({
+        data: {
+          bookId: parseInt(bookId),
+          memberId: request.user?.id,
+          status: "BORROWED",
+          borrowedDate: new Date(),
+          dueDate: addDays(new Date(), 7),
+          createdBy: request.user?.id,
+        },
+      });
+
+      await tx.bookStatus.update({
+        where: {
+          id: parseInt(bookId),
+        },
+        data: {
+          availableQty: {
+            decrement: 1,
+          },
+          borrowedQty: {
+            increment: 1,
+          },
+        },
+      });
+      return newLending;
+    });
+
+    reply.status(201).send({
+      statusCode: 201,
+      message: "Successfully borrowed a book",
+      data: lendingTransaction,
+    });
+  });
 });
 
 // ** ERROR HANDLER
 server.setErrorHandler((error, request, reply) => {
-  console.log(error)
+  console.log(error);
   if (error.statusCode) {
     return reply.status(error.statusCode).send({
       statusCode: error.statusCode,

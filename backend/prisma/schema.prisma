@@ -31,6 +31,11 @@ enum CategoryName {
   ACTION
 }
 
+enum LendingStatus {
+  BORROWED
+  RETURNED
+}
+
 model User {
   id       Int      @id @default(autoincrement())
   email    String   @unique
@@ -89,7 +94,7 @@ model Lending {
   borrowedDate DateTime  @map("borrowed_date")
   dueDate      DateTime  @map("due_date")
   returnDate   DateTime? @map("return_date")
-  status       String
+  status       LendingStatus
   createdBy    Int       @map("created_by")
   book         Book      @relation(fields: [bookId], references: [id])
   member       Member    @relation(fields: [memberId], references: [id])
