@@ -5,5 +5,6 @@ export * from "./login";
 export * from "./books";
 export * from "./lendings";
 export * from "./analytics";
+export * from "./root";
 
 export type SchemaApi = { schema: FastifySchema };

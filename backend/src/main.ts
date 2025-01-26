@@ -20,8 +20,10 @@ import {
   loginSchemaAPI,
   registerSchemaAPI,
   returnBookSchemaAPI,
+  rootSchemaAPI,
   updateBookSchemaAPI,
 } from "./openapi";
+import { fastifyCors } from "@fastify/cors";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -33,6 +35,8 @@ const prisma = new PrismaClient();
 
 const server: FastifyInstance = Fastify({});
 
+server.register(fastifyCors);
+
 server.register(FastifySwagger, {
   openapi: {
     info: {
@@ -41,6 +45,7 @@ server.register(FastifySwagger, {
       version: "1.0.0",
     },
     tags: [
+      { name: "Home", description: "Entrypoint for the API"},
       { name: "Auth", description: "Authentication endpoints" },
       { name: "Books", description: "Book management endpoints" },
       { name: "Lendings", description: "Lending management endpoints" },
@@ -61,8 +66,16 @@ server.register(FastifySwagger, {
 server.decorateRequest("user", null);
 server.register(fastifyFormBody);
 
-// ** REGISTER & LOGIN
+// ** PUBLIC ROUTES
 server.register(async function publicContext(childServer) {
+  childServer.get("/", rootSchemaAPI, (request, reply) => {
+    reply.send({
+      statusCode: 200,
+      message: `Welcome to the library management API, please visit ${
+        process.env.BASE_URL || "http://localhost:3000"
+      }/reference for more information`,
+    });
+  });
   childServer.post("/register", registerSchemaAPI, async (request, reply) => {
     const parsedBody = userRegistrationSchema.parse(request.body);
     parsedBody.password = await hashPassword(parsedBody.password);
@@ -121,7 +134,7 @@ server.register(async function publicContext(childServer) {
   });
 });
 
-// ** BOOKS API
+// ** PROTECTED ROUTES
 server.register(async function authenticatedContext(childServer) {
   // AUTHENTICATION
   childServer.addHook("preHandler", async (request, reply) => {
@@ -289,33 +302,35 @@ server.register(async function authenticatedContext(childServer) {
       if (book.status?.availableQty === 0) {
         throw { statusCode: 400, message: "Book is not available" };
       }
-      const lendingTransaction = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-        const newLending = await tx.lending.create({
-          data: {
-            bookId: parseInt(bookId),
-            memberId: request.user?.id,
-            status: "BORROWED",
-            borrowedDate: new Date(),
-            dueDate: addDays(new Date(), 7),
-            createdBy: request.user?.id,
-          },
-        });
+      const lendingTransaction = await prisma.$transaction(
+        async (tx: Prisma.TransactionClient) => {
+          const newLending = await tx.lending.create({
+            data: {
+              bookId: parseInt(bookId),
+              memberId: request.user?.id,
+              status: "BORROWED",
+              borrowedDate: new Date(),
+              dueDate: addDays(new Date(), 7),
+              createdBy: request.user?.id,
+            },
+          });
 
-        await tx.bookStatus.update({
-          where: {
-            id: parseInt(bookId),
-          },
-          data: {
-            availableQty: {
-              decrement: 1,
+          await tx.bookStatus.update({
+            where: {
+              id: parseInt(bookId),
             },
-            borrowedQty: {
-              increment: 1,
+            data: {
+              availableQty: {
+                decrement: 1,
+              },
+              borrowedQty: {
+                increment: 1,
+              },
             },
-          },
-        });
-        return newLending;
-      });
+          });
+          return newLending;
+        }
+      );
 
       reply.status(201).send({
         statusCode: 201,
@@ -369,31 +384,33 @@ server.register(async function authenticatedContext(childServer) {
       if (lending.status === "RETURNED") {
         throw { statusCode: 400, message: "Book has already been returned" };
       }
-      const returningBookTransaction = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-        const updateLending = await tx.lending.update({
-          where: {
-            id: parseInt(id),
-          },
-          data: {
-            status: "RETURNED",
-            returnDate: new Date(),
-          },
-        });
-        await tx.bookStatus.update({
-          where: {
-            id: lending.bookId,
-          },
-          data: {
-            availableQty: {
-              increment: 1,
+      const returningBookTransaction = await prisma.$transaction(
+        async (tx: Prisma.TransactionClient) => {
+          const updateLending = await tx.lending.update({
+            where: {
+              id: parseInt(id),
             },
-            borrowedQty: {
-              decrement: 1,
+            data: {
+              status: "RETURNED",
+              returnDate: new Date(),
             },
-          },
-        });
-        return updateLending;
-      });
+          });
+          await tx.bookStatus.update({
+            where: {
+              id: lending.bookId,
+            },
+            data: {
+              availableQty: {
+                increment: 1,
+              },
+              borrowedQty: {
+                decrement: 1,
+              },
+            },
+          });
+          return updateLending;
+        }
+      );
       reply.status(200).send({
         statusCode: 200,
         message: "Successfully returned a book",
@@ -478,6 +495,7 @@ server.get("/openapi.json", async (request, reply) => {
   return server.swagger();
 });
 
+// ** SCALAR REFERENCES
 server.register(ScalarApiReference, {
   routePrefix: "/reference",
   configuration: {
@@ -489,6 +507,13 @@ server.register(ScalarApiReference, {
     },
     defaultLayout: "modern",
     navigation: [
+      {
+        label: "Home",
+        items: {
+          label: "Entrypoint",
+          path: "/"
+        }
+      },
       {
         label: "Authentication",
         items: [
@@ -534,7 +559,10 @@ server.ready();
 
 const start = async () => {
   try {
-    await server.listen({ port: process.env.PORT ? +process.env.PORT : 3000, host: "0.0.0.0" });
+    await server.listen({
+      port: process.env.PORT ? +process.env.PORT : 3000,
+      host: "0.0.0.0",
+    });
 
     const address = server.server.address();
     const port = typeof address === "string" ? address : address?.port;

@@ -50,6 +50,7 @@ npm install
 ```plaintext
 DATABASE_URL="postgresql://user:password@localhost:5432/library_db"
 JWT_SECRET="your_secret_key"
+BASE_URL="your_base_url_or_http://localhost:3000"
 ```
 4. Run database migrations:
 ```bash
