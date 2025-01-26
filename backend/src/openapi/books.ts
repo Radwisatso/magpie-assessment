@@ -23,6 +23,17 @@ export const getBooksSchemaAPI: SchemaApi = {
                 quantity: { type: "number" },
                 categoryId: { type: "number" },
                 createdBy: { type: "number" },
+                category: {
+                  type: "object",
+                  properties: {
+                    id: {
+                      type: "number",
+                    },
+                    name: {
+                      type: "string",
+                    }
+                  },
+                },
               },
             },
           },

@@ -150,7 +150,12 @@ server.register(async function authenticatedContext(childServer) {
   });
   // GET BOOKS
   childServer.get("/books", getBooksSchemaAPI, async (request, reply) => {
-    const books = await prisma.book.findMany();
+    const books = await prisma.book.findMany({
+      include: {
+        category: true
+      }
+    });
+    console.log(books)
     reply.code(200).send({
       statusCode: 200,
       message: "Successfully fetch books",
