@@ -49,6 +49,7 @@ npm install
 3. Set up environment variables in `.env`:
 ```plaintext
 DATABASE_URL="postgresql://user:password@localhost:5432/library_db"
+JWT_SECRET="your_secret_key"
 ```
 4. Run database migrations:
 ```bash
@@ -57,6 +58,33 @@ npx prisma migrate dev
 5. Start the server:
 ```bash
 npm run dev
+```
+
+## Running with Docker
+
+### Prerequisites
+- Docker
+- Docker Compose
+
+### Quick Start with Docker
+1. Clone the repository
+2. Start the application:
+```bash
+docker compose up --build -d
+```
+
+The application will be available at `http://localhost:3000`
+
+### Database Seeding with Docker
+To seed the database after container is running:
+```bash
+docker compose exec api npm run db:seed
+```
+
+### Stopping Docker Compose
+To quit the Docker Compose application just simply run this command:
+```bash
+docker compose down
 ```
 
 ## API Documentation Access

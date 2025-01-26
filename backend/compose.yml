@@ -1,0 +1,37 @@
+services:
+  pg:
+    image: postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    container_name: "pg-library-api"
+    ports:
+      - '5432:5432'
+    volumes:
+      - library-api:/var/lib/postgresql/data
+    networks:
+      - internal
+
+  api:   
+    build: .
+    container_name: "backend-library-api"
+    restart: always
+    depends_on:
+      - pg
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@pg:5432/postgres
+      - JWT_SECRET=SECRET
+      - PORT=3000
+    networks:
+      - internal
+
+volumes:
+  library-api:
+
+networks:
+  internal:
+    driver: bridge

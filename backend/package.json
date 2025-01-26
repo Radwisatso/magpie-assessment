@@ -4,7 +4,12 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon src/main.ts"
+    "db:migrate": "prisma migrate dev",
+    "db:migrate:prod": "prisma migrate deploy",
+    "db:seed": "prisma db seed",
+    "dev": "nodemon src/main.ts",
+    "start": "tsx src/main.ts",
+    "prestart": "prisma migrate dev"
   },
   "keywords": [],
   "author": "",
@@ -33,6 +38,6 @@
     "zod": "^3.24.1"
   },
   "prisma": {
-    "seed": "ts-node prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts"
   }
 }

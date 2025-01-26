@@ -1,5 +1,5 @@
 import { bookSchema, userLoginSchema, userRegistrationSchema } from "./schemas";
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import Fastify, { FastifyInstance } from "fastify";
 import fastifyFormBody from "@fastify/formbody";
 import z from "zod";
@@ -289,7 +289,7 @@ server.register(async function authenticatedContext(childServer) {
       if (book.status?.availableQty === 0) {
         throw { statusCode: 400, message: "Book is not available" };
       }
-      const lendingTransaction = await prisma.$transaction(async (tx) => {
+      const lendingTransaction = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         const newLending = await tx.lending.create({
           data: {
             bookId: parseInt(bookId),
@@ -369,7 +369,7 @@ server.register(async function authenticatedContext(childServer) {
       if (lending.status === "RETURNED") {
         throw { statusCode: 400, message: "Book has already been returned" };
       }
-      const returningBookTransaction = await prisma.$transaction(async (tx) => {
+      const returningBookTransaction = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         const updateLending = await tx.lending.update({
           where: {
             id: parseInt(id),
@@ -519,26 +519,6 @@ server.register(ScalarApiReference, {
         items: [{ label: "Dashboard Statistics", path: "/analytics" }],
       },
     ],
-    examples: {
-      auth: {
-        login: {
-          value: {
-            email: "user@example.com",
-            password: "password123",
-          },
-        },
-        register: {
-          value: {
-            name: "John Doe",
-            email: "john@example.com",
-            password: "password123",
-            role: "MEMBER",
-            phone: "1234567890",
-            status: "ACTIVE",
-          },
-        },
-      },
-    },
   },
   hooks: {
     onRequest: function (request, reply, done) {
@@ -554,7 +534,7 @@ server.ready();
 
 const start = async () => {
   try {
-    await server.listen({ port: 3000 });
+    await server.listen({ port: process.env.PORT ? +process.env.PORT : 3000, host: "0.0.0.0" });
 
     const address = server.server.address();
     const port = typeof address === "string" ? address : address?.port;
