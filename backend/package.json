@@ -9,7 +9,8 @@
     "db:seed": "prisma db seed",
     "dev": "nodemon src/main.ts",
     "start": "tsx src/main.ts",
-    "prestart": "prisma migrate dev"
+    "prestart": "prisma migrate dev",
+    "build": "tsc"
   },
   "keywords": [],
   "author": "",

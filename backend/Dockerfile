@@ -10,8 +10,10 @@ RUN npm install
 
 COPY . /app/
 
+RUN npm run build
+
 RUN npx prisma generate
 
 EXPOSE 3000
 
-CMD ["npm", "run", "start"]
+CMD ["node", "./dist/src/main.js"]
