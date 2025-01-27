@@ -45,7 +45,7 @@ A comprehensive full-stack application for managing library resources, including
 ## Quick Start with Docker
 1. Clone the repository:
    ```bash
-   git clone
+   git clone <repository_link>
    cd magpie-assessment
    ```
 2. Run the application with Docker:
