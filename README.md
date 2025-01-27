@@ -3,6 +3,7 @@ A comprehensive full-stack application for managing library resources, including
 
 ## Deployment Links
 - Server : https://library-management-api-3b7d.onrender.com (Render)
+- Server API Reference : https://library-management-api-3b7d.onrender.com/reference (Render)
 - Client : https://library-management-ecru.vercel.app/ (Vercel)
 - Database : Hosted on Neon.tech
 
