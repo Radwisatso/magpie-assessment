@@ -185,6 +185,9 @@ server.register(async function authenticatedContext(childServer) {
         where: {
           id: parseInt(id),
         },
+        include: {
+          category: true,
+        }
       });
       if (!book) {
         throw { statusCode: 404, message: "Book not found" };
@@ -241,9 +244,6 @@ server.register(async function authenticatedContext(childServer) {
     });
     if (!book) {
       throw { statusCode: 404, message: "Book not found" };
-    }
-    if (book.createdBy !== request.user.id) {
-      throw { statusCode: 403, message: "Forbidden" };
     }
     const updatedBook = await prisma.book.update({
       where: {
