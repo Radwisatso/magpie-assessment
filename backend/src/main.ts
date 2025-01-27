@@ -168,7 +168,7 @@ server.register(async function authenticatedContext(childServer) {
         category: true
       }
     });
-    console.log(books)
+    // console.log(books)
     reply.code(200).send({
       statusCode: 200,
       message: "Successfully fetch books",
@@ -283,12 +283,12 @@ server.register(async function authenticatedContext(childServer) {
       if (book.createdBy !== request.user.id) {
         throw { statusCode: 403, message: "Forbidden" };
       }
-      await prisma.bookStatus.delete({
+      await prisma.book.delete({
         where: {
           id: parseInt(id),
         },
         include: {
-          book: true,
+          status: true,
         },
       });
       reply.status(200).send({

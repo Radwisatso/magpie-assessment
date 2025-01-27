@@ -108,7 +108,7 @@ model BookStatus {
   bookId       Int   @map("book_id") @unique
   availableQty Int   @map("available_qty")
   borrowedQty  Int   @map("borrowed_qty")
-  book         Book  @relation(fields: [bookId], references: [id])
+  book         Book  @relation(fields: [bookId], references: [id], onDelete: Cascade, onUpdate: Cascade) 
 
   @@map("book_status")
 }
