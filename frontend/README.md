@@ -1,36 +1,106 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Library Management System
+
+A modern web application for managing library books and lending services, built with Next.js 15 and React 19.
+
+## Features
+
+- 📚 Book Management
+  - Create, update, and delete books
+  - View book details and availability status
+  - Track book quantities and lending status
+- 📖 Lending System
+  - Borrow books
+  - Track borrowed books
+  - Return system with due dates
+  - Real-time availability updates
+- 🔐 Authentication
+  - Secure login system
+  - Protected routes with JWT
+  - Token-based authentication
+- 📱 Responsive Design
+  - Mobile-friendly interface (responsive grid: 1 column -> 2 columns -> 4 columns)
+  - Adaptive layout
+  - Clean and modern UI using Tailwind CSS and Radix UI
+
+## Tech Stack
+
+- Next.js 15.1.6
+- React 19
+- TypeScript
+- Tailwind CSS
+- Radix UI Components
+- Server Actions
+- Zod Validation
+- JWT Authentication (jose)
+- date-fns
 
 ## Getting Started
 
-First, run the development server:
-
+1. Clone the repository
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repository-url>
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Set up environment variables
+```env
+BASE_URL=your_api_base_url
+JWT_SECRET=your_jwt_secret
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Run the development server
+```bash
+npm run dev
+```
 
-## Learn More
+The app will run on port 3001: [http://localhost:3001](http://localhost:3001)
 
-To learn more about Next.js, take a look at the following resources:
+## Project Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+src/
+├── app/
+│   ├── (auth)/
+│   │   ├── login/
+│   │   └── signup/
+│   ├── (protected)/
+│   │   └── books/
+│   │       ├── [id]/         # Dynamic book edit page
+│   │       ├── analytics/    # Analytics dashboard
+│   │       ├── create/       # Create new book
+│   │       ├── lendings/     # Lending management
+│   │       └── _components/  # Shared components
+│   ├── actions/             # Server actions
+│   └── lib/                 # Utility functions
+├── middleware.ts            # Middleware for authentication
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Key Features Implementation
 
-## Deploy on Vercel
+- **Server Actions**: Form handling and data mutations with proper validation
+- **Protected Routes**: JWT-based middleware authentication
+- **Form Validation**: Zod schema for data integrity
+- **Responsive Layout**: Mobile-first with Tailwind breakpoints
+- **Component Architecture**: Reusable components with TypeScript interfaces
+- **Lending System**: Full borrowing and return functionality
+- **Analytics**: Book lending and availability statistics
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Scripts
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `npm run dev` - Start development server on port 3001
+- `npm run build` - Build the application
+- `npm start` - Start production server
+- `npm run lint` - Run ESLint
+
+## Environment Variables
+
+- `BASE_URL` - Backend API URL (default: http://localhost:3000)
+- `JWT_SECRET` - Secret key for JWT authentication
+
+## License
+
+This project is licensed under the MIT License
