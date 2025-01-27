@@ -1,6 +1,11 @@
 # Library Management System
 A comprehensive full-stack application for managing library resources, including books, users, and lending operations.
 
+## Deployment Links
+- Server : https://library-management-api-3b7d.onrender.com (Render)
+- Client : https://library-management-ecru.vercel.app/ (Vercel)
+- Database : Hosted on Neon.tech
+
 ## Project Structure
 ```
 ├── backend/         # Fastify API server
