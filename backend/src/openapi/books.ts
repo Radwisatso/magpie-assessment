@@ -34,6 +34,23 @@ export const getBooksSchemaAPI: SchemaApi = {
                     },
                   },
                 },
+                status: {
+                  type: "object",
+                  properties: {
+                    id: {
+                      type: "number",
+                    },
+                    bookId: {
+                      type: "number",
+                    },
+                    availableQty: {
+                      type: "number",
+                    },
+                    borrowedQty: {
+                      type: "number",
+                    },
+                  },
+                }
               },
             },
           },

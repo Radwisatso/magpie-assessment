@@ -160,21 +160,21 @@ server.register(async function authenticatedContext(childServer) {
     });
   })
 
-
   // GET BOOKS
   childServer.get("/books", getBooksSchemaAPI, async (request, reply) => {
     const books = await prisma.book.findMany({
       include: {
-        category: true
+        category: true,
+        status: true
       }
     });
-    // console.log(books)
     reply.code(200).send({
       statusCode: 200,
       message: "Successfully fetch books",
       data: books,
     });
   });
+
   // GET BOOK BY ID
   childServer.get(
     "/books/:id",
@@ -199,6 +199,7 @@ server.register(async function authenticatedContext(childServer) {
       });
     }
   );
+
   // CREATE BOOK
   childServer.post("/books", createBookSchemaAPI, async (request, reply) => {
     const parsedBody = bookSchema.parse(request.body);
@@ -229,6 +230,7 @@ server.register(async function authenticatedContext(childServer) {
       data: newBook,
     });
   });
+
   // UPDATE BOOK
   childServer.put("/books/:id", updateBookSchemaAPI, async (request, reply) => {
     const { id } = request.params as { id: string };
@@ -263,6 +265,7 @@ server.register(async function authenticatedContext(childServer) {
       data: updatedBook,
     });
   });
+
   // DELETE BOOK
   childServer.delete(
     "/books/:id",
@@ -297,6 +300,7 @@ server.register(async function authenticatedContext(childServer) {
       });
     }
   );
+
   // CREATE LENDING
   childServer.post(
     "/lendings/:bookId",
@@ -357,6 +361,7 @@ server.register(async function authenticatedContext(childServer) {
       });
     }
   );
+
   // GET USERS/MEMBERS LENDINGS HISTORY
   childServer.get("/lendings", getLendingsSchemaAPI, async (request, reply) => {
     if (!request.user) {
@@ -376,6 +381,7 @@ server.register(async function authenticatedContext(childServer) {
       data: lendings,
     });
   });
+
   // RETURN BOOK LENDINGS
   childServer.put(
     "/lendings/:id/return",
