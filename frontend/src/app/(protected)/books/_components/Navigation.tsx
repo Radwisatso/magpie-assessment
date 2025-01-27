@@ -11,27 +11,41 @@ export default function Navigation() {
       <ul className="space-y-2">
         <li>
           <Link
+            href="/books/create"
+            className={clsx("block p-2 hover:bg-gray-100 rounded", {
+              "bg-gray-100": pathName === "/books/create",
+            })}
+          >
+            Create a new book
+          </Link>
+        </li>
+        <li>
+          <Link
             href="/books"
             className={clsx("block p-2 hover:bg-gray-100 rounded", {
-                "bg-gray-100": pathName === "/books"
+              "bg-gray-100": pathName === "/books",
             })}
           >
             Registered Books
           </Link>
         </li>
         <li>
-          <Link  href="/books/lendings"
+          <Link
+            href="/books/lendings"
             className={clsx("block p-2 hover:bg-gray-100 rounded", {
-                "bg-gray-100": pathName === "/books/lendings"
-            })}>
+              "bg-gray-100": pathName === "/books/lendings",
+            })}
+          >
             Lendings
           </Link>
         </li>
         <li>
-          <Link  href="/books/analytics"
+          <Link
+            href="/books/analytics"
             className={clsx("block p-2 hover:bg-gray-100 rounded", {
-                "bg-gray-100": pathName === "/books/analytics"
-            })}>
+              "bg-gray-100": pathName === "/books/analytics",
+            })}
+          >
             Analytics
           </Link>
         </li>

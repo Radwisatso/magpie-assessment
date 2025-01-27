@@ -19,6 +19,10 @@ export default async function DashboardPage() {
   const resJson = await res.json();
   const books: Book[] = resJson.data
 
+  if (!res.ok) {
+    return <p>Error fetching books</p>;
+  }
+
   return (
     <div className="flex-1 p-6 overflow-y-auto h-full">
       <div className="grid grid-cols-4 gap-6">
