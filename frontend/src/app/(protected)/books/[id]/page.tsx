@@ -3,7 +3,7 @@
 import { updateBook } from "@/app/actions/book";
 import { fetchBookById } from "@/app/lib/fetchBookById";
 import { fetchCategories } from "@/app/lib/fetchCategories";
-import { useActionState, useEffect, useState } from "react";
+import { use, useActionState, useEffect, useState } from "react";
 
 interface Book {
   id: number;
@@ -32,12 +32,17 @@ const initialState = {
   },
 };
 
-export default function BookEditForm({ params }: { params: { id: string } }) {
+export default function BookEditForm({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const [book, setBook] = useState<Book>();
   const [categories, setCategories] = useState<Category[]>([]);
-  const [bookId, setBookId] = useState<string>("");
+//   const [bookId, setBookId] = useState<string>("");
   const [isLoading, setLoading] = useState(false);
-  const updateBookWithId = updateBook.bind(null, bookId);
+  const {id} = use(params)
+  const updateBookWithId = updateBook.bind(null, id);
   const [state, formAction, pending] = useActionState(
     updateBookWithId,
     initialState
@@ -49,7 +54,7 @@ export default function BookEditForm({ params }: { params: { id: string } }) {
         const id = (await params).id;
         const foundBook = await fetchBookById(+id);
         const foundCategories = await fetchCategories();
-        setBookId(id);
+        // setBookId(id);
         setBook(foundBook.data);
         setCategories(foundCategories.data);
       } catch (error) {
@@ -64,7 +69,7 @@ export default function BookEditForm({ params }: { params: { id: string } }) {
   return (
     <>
       <div className="flex flex-col gap-5 rounded-md p-5 min-w-96 overflow-y-auto h-full">
-        <h1 className="text-3xl">Update Book ID: {bookId}</h1>
+        <h1 className="text-3xl">Update Book ID: {id}</h1>
         {state?.message && <p className="text-red-600">Error creating book</p>}
         <form action={formAction} className="flex flex-col gap-5">
           <div>
