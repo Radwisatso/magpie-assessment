@@ -72,6 +72,7 @@ A comprehensive full-stack application for managing library resources, including
    ```plaintext
    DATABASE_URL=postgres://user:password@localhost:5432/library_db
    JWT_SECRET=your_secret_key
+   BASE_URL=backend_url_address_or_localhost:3000
    ```
 4. Run migrations: `npm run db:migrate`
 5. Run seeds: `npm run db:seed`

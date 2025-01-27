@@ -26,6 +26,7 @@ services:
       - DATABASE_URL=postgres://postgres:postgres@pg:5432/postgres
       - JWT_SECRET=SECRET
       - PORT=3000
+      - BASE_URL=http://localhost:3000
     networks:
       - internal
 
