@@ -11,6 +11,7 @@ interface BookCardProps {
   quantity: number;
   categoryName: string;
   onDelete: (id: number) => Promise<void>;
+  onLend: (bookId: number) => Promise<void>;
 }
 
 export default function BookCard({
@@ -21,6 +22,7 @@ export default function BookCard({
   quantity,
   categoryName,
   onDelete,
+  onLend,
 }: BookCardProps) {
   return (
     <div className="rounded-lg border p-4 h-auto flex flex-col gap-3">
@@ -33,6 +35,11 @@ export default function BookCard({
         <Button>
           <Link href={`/books/${id}`}>View</Link>
         </Button>
+        <form action={() => onLend(id)}>
+          <Button type="submit" color="green">
+            Lend
+          </Button>
+        </form>
         <form action={() => onDelete(id)}>
           <Button type="submit" color="red">
             Delete

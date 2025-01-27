@@ -1,7 +1,15 @@
 import { fetchBooks } from "@/app/lib/fetchBooks";
 import BookCard from "./_components/BookCard";
 import { deleteBook } from "@/app/actions/book";
-
+import { createLending } from "@/app/actions/lending";
+/*
+"status": {
+        "id": 2,
+        "bookId": 2,
+        "availableQty": 8,
+        "borrowedQty": 2
+      }
+*/
 interface Book {
   id: number;
   title: string;
@@ -13,6 +21,12 @@ interface Book {
   category: {
     id: number;
     name: string;
+  };
+  status: {
+    id: number;
+    bookId: number;
+    availableQty: number;
+    borrowedQty: number;
   };
 }
 export default async function DashboardPage() {
@@ -34,9 +48,10 @@ export default async function DashboardPage() {
             title={book.title}
             author={book.author}
             isbn={book.isbn}
-            quantity={book.quantity}
+            quantity={book.status.availableQty}
             categoryName={book.category.name}
             onDelete={deleteBook}
+            onLend={createLending}
           />
         ))}
       </div>

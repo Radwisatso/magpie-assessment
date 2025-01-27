@@ -42,7 +42,6 @@ export default function BookEditForm({ params }: { params: { id: string } }) {
     updateBookWithId,
     initialState
   );
-  console.log(state);
   useEffect(() => {
     (async () => {
       setLoading(true);
