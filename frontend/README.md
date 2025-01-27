@@ -37,27 +37,35 @@ A modern web application for managing library books and lending services, built 
 ## Getting Started
 
 1. Clone the repository
+
 ```bash
 git clone <repository-url>
 ```
 
 2. Install dependencies
+
 ```bash
 npm install
 ```
 
 3. Set up environment variables
+
 ```env
 BASE_URL=your_api_base_url
 JWT_SECRET=your_jwt_secret
 ```
 
 4. Run the development server
+
 ```bash
 npm run dev
 ```
 
 The app will run on port 3001: [http://localhost:3001](http://localhost:3001)
+
+## Quick Start with Docker
+
+it's recommended to run Docker via root folder of repository using `docker compose`
 
 ## Project Structure
 
