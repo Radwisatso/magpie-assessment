@@ -43,9 +43,7 @@ export async function createBook(
     quantity,
     categoryId,
   });
-  console.log(validatedFields);
   if (!validatedFields.success) {
-    console.log(validatedFields.error.flatten().fieldErrors);
     return {
       errors: validatedFields.error.flatten().fieldErrors,
     };
@@ -64,7 +62,6 @@ export async function createBook(
       categoryId,
     }),
   });
-  console.log(response, "ini bukuuuu <<<<<");
   if (!response.ok) {
     return {
       message: "Error creating book",
@@ -85,4 +82,53 @@ export async function deleteBook(id: number) {
   });
   revalidatePath("/books");
   redirect("/books");
+}
+
+export async function updateBook(
+  bookId: string,
+  prevState: { errors?: Record<string, string[]> },
+  formData: FormData
+) {
+  console.log(bookId, prevState, formData);
+  const cookiesStore = await cookies();
+  const token = cookiesStore.get("token")?.value;
+
+  const title = formData.get("title");
+  const author = formData.get("author");
+  const isbn = formData.get("isbn");
+  const quantity = +formData.get("quantity")!;
+  const categoryId = +formData.get("categoryId")!;
+
+  const validatedFields = schema.safeParse({
+    title,
+    author,
+    isbn,
+    quantity,
+    categoryId,
+  });
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+  const response = await fetch(process.env.BASE_URL + "/books/" + bookId, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      authorization: "Bearer " + token,
+    },
+    body: JSON.stringify({
+      title,
+      author,
+      isbn,
+      quantity,
+      categoryId,
+    }),
+  });
+  if (!response.ok) {
+    return {
+      message: "Error creating book",
+    };
+  }
+  redirect("/books")
 }

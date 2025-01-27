@@ -1,8 +1,26 @@
 "use client";
 
-import { createBook } from "@/app/actions/book";
-import { useActionState, useEffect, useState } from "react";
+import { updateBook } from "@/app/actions/book";
+import { fetchBookById } from "@/app/lib/fetchBookById";
 import { fetchCategories } from "@/app/lib/fetchCategories";
+import { useActionState, useEffect, useState } from "react";
+
+interface Book {
+  id: number;
+  title: string;
+  author: string;
+  isbn: string;
+  quantity: number;
+  category: {
+    id: number;
+    name: string;
+  };
+}
+
+interface Category {
+  id: number;
+  name: string;
+}
 
 const initialState = {
   errors: {
@@ -14,29 +32,40 @@ const initialState = {
   },
 };
 
-interface Category {
-  id: number;
-  name: string;
-}
-
-export default function BookCreateForm() {
-  const [state, formAction, pending] = useActionState(createBook, initialState);
+export default function BookEditForm({ params }: { params: { id: string } }) {
+  const [book, setBook] = useState<Book>();
   const [categories, setCategories] = useState<Category[]>([]);
-
+  const [bookId, setBookId] = useState<string>("");
+  const [isLoading, setLoading] = useState(false);
+  const updateBookWithId = updateBook.bind(null, bookId);
+  const [state, formAction, pending] = useActionState(
+    updateBookWithId,
+    initialState
+  );
+  console.log(state);
   useEffect(() => {
     (async () => {
+      setLoading(true);
       try {
-        const res = await fetchCategories();
-        setCategories(res.data);
+        const id = (await params).id;
+        const foundBook = await fetchBookById(+id);
+        const foundCategories = await fetchCategories();
+        setBookId(id);
+        setBook(foundBook.data);
+        setCategories(foundCategories.data);
       } catch (error) {
         console.log(error);
       }
+      setLoading(false);
     })();
-  }, []);
+  }, [params]);
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
   return (
     <>
       <div className="flex flex-col gap-5 rounded-md p-5 min-w-96 overflow-y-auto h-full">
-        <h1 className="text-3xl">Create Book</h1>
+        <h1 className="text-3xl">Update Book ID: {bookId}</h1>
         {state?.message && <p className="text-red-600">Error creating book</p>}
         <form action={formAction} className="flex flex-col gap-5">
           <div>
@@ -48,6 +77,7 @@ export default function BookCreateForm() {
               id="title"
               className="border border-gray-300 rounded-md p-2 w-full"
               placeholder="Book Title"
+              defaultValue={book?.title}
             />
           </div>
           {state?.errors?.title &&
@@ -65,6 +95,7 @@ export default function BookCreateForm() {
               id="author"
               className="border border-gray-300 rounded-md p-2 w-full"
               placeholder="Author Name"
+              defaultValue={book?.author}
             />
           </div>
           {state?.errors?.author &&
@@ -82,6 +113,7 @@ export default function BookCreateForm() {
               id="isbn"
               className="border border-gray-300 rounded-md p-2 w-full"
               placeholder="ISBN Number"
+              defaultValue={book?.isbn}
             />
           </div>
           {state?.errors?.isbn &&
@@ -99,6 +131,7 @@ export default function BookCreateForm() {
               id="quantity"
               className="border border-gray-300 rounded-md p-2 w-full"
               placeholder="Quantity"
+              defaultValue={book?.quantity}
             />
           </div>
           {state?.errors?.quantity &&
@@ -113,7 +146,7 @@ export default function BookCreateForm() {
             <select
               name="categoryId"
               className="border border-gray-300 rounded-md p-2 w-full"
-              defaultValue={""}
+              defaultValue={book?.category?.id}
             >
               <option value="" disabled>
                 Choose the category
