@@ -16,6 +16,7 @@ import {
   deleteBookSchemaAPI,
   getBookByIdSchemaAPI,
   getBooksSchemaAPI,
+  getCategoriesSchemaAPI,
   getLendingsSchemaAPI,
   loginSchemaAPI,
   registerSchemaAPI,
@@ -148,6 +149,18 @@ server.register(async function authenticatedContext(childServer) {
       throw { statusCode: 401, message: "Unauthorized" };
     }
   });
+
+  // GET CATEGORIES
+  childServer.get("/categories", getCategoriesSchemaAPI, async (request, reply) => {
+    const categories = await prisma.category.findMany();
+    reply.code(200).send({
+      statusCode: 200,
+      message: "Successfully fetch categories",
+      data: categories,
+    });
+  })
+
+
   // GET BOOKS
   childServer.get("/books", getBooksSchemaAPI, async (request, reply) => {
     const books = await prisma.book.findMany({
