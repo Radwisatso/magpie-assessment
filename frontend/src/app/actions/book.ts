@@ -67,9 +67,22 @@ export async function createBook(
   console.log(response, "ini bukuuuu <<<<<");
   if (!response.ok) {
     return {
-      message: "Error creating book"
+      message: "Error creating book",
     };
   }
+  revalidatePath("/books");
+  redirect("/books");
+}
+
+export async function deleteBook(id: number) {
+  const cookiesStore = await cookies();
+  const token = cookiesStore.get("token")?.value;
+  await fetch(process.env.BASE_URL + "/books/" + id, {
+    method: "DELETE",
+    headers: {
+      authorization: "Bearer " + token,
+    },
+  });
   revalidatePath("/books");
   redirect("/books");
 }

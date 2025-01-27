@@ -1,5 +1,6 @@
 import { fetchBooks } from "@/app/lib/fetchBooks";
 import BookCard from "./_components/BookCard";
+import { deleteBook } from "@/app/actions/book";
 
 interface Book {
   id: number;
@@ -17,7 +18,7 @@ interface Book {
 export default async function DashboardPage() {
   const res = await fetchBooks();
   const resJson = await res.json();
-  const books: Book[] = resJson.data
+  const books: Book[] = resJson.data;
 
   if (!res.ok) {
     return <p>Error fetching books</p>;
@@ -35,6 +36,7 @@ export default async function DashboardPage() {
             isbn={book.isbn}
             quantity={book.quantity}
             categoryName={book.category.name}
+            onDelete={deleteBook}
           />
         ))}
       </div>

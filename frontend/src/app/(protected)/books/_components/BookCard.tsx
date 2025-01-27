@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@radix-ui/themes";
 import Link from "next/link";
 
@@ -8,6 +10,7 @@ interface BookCardProps {
   isbn: string;
   quantity: number;
   categoryName: string;
+  onDelete: (id: number) => Promise<void>;
 }
 
 export default function BookCard({
@@ -17,6 +20,7 @@ export default function BookCard({
   isbn,
   quantity,
   categoryName,
+  onDelete,
 }: BookCardProps) {
   return (
     <div className="rounded-lg border p-4 h-auto flex flex-col gap-3">
@@ -25,9 +29,16 @@ export default function BookCard({
       <p className="text-sm">ISBN: {isbn}</p>
       <p className="text-sm">Quantity: {quantity}</p>
       <p className="text-sm">Category: {categoryName}</p>
-      <Button>
-        <Link href={`/books/${id}`}>View</Link>
-      </Button>
+      <div className="flex gap-2">
+        <Button>
+          <Link href={`/books/${id}`}>View</Link>
+        </Button>
+        <form action={() => onDelete(id)}>
+          <Button type="submit" color="red">
+            Delete
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }
