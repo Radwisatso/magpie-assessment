@@ -7,6 +7,7 @@ A comprehensive full-stack application for managing library resources, including
 - Client : https://library-management-ecru.vercel.app/ (Vercel)
 - Database : Hosted on Neon.tech
 <br>
+
 _Disclaimer: After a certain period of time, the Render server may go into sleep mode. To ensure uninterrupted access, make sure to click the url above and wait until 50 seconds or more_
 
 ## Project Structure
@@ -59,15 +60,20 @@ _Disclaimer: After a certain period of time, the Render server may go into sleep
    ```bash
    docker compose up --build -d
    ```
-3. Seed the database after the container is running:
+
+3. Migrate the database after the container is running:
+   ```bash
+   docker compose exec api npm run db:migrate
+   ```
+4. Seed the database after the container is running:
    ```bash
    docker compose exec api npm run db:seed
    ```
-4. Access the application:
+5. Access the application:
    
    - Frontend: http://localhost:3001
    - Backend: http://localhost:3000/reference
-5. To stop the application:
+6. To stop the application:
    ```bash
    docker compose down
    ```
